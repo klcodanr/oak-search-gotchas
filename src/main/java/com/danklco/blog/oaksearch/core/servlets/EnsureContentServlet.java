@@ -99,7 +99,9 @@ public class EnsureContentServlet extends SlingAllMethodsServlet {
                                     PN_TEST_ITERATION, iteration, PN_TEST_ITEM, item,
                                     PN_TEST_CHILD, child));
                 }
-                log.info("Saving at item {} of iteration {}...", item, iteration);
+                if (item % 100 == 0) {
+                    log.info("Saving at item {} of iteration {}...", item, iteration);
+                }
                 admin.commit();
             }
         }
