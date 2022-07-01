@@ -15,6 +15,7 @@
  */
 package com.danklco.blog.oaksearch.it.tests;
 
+import java.io.File;
 import java.io.IOException;
 import java.io.UnsupportedEncodingException;
 import java.net.URI;
@@ -51,19 +52,28 @@ public abstract class OakSearchITBase {
     protected SlingClient adminAuthor;
     protected SlingClient limitedAccess;
 
-    public OakSearchITBase() throws ClientException, UnsupportedEncodingException {
+    public OakSearchITBase() throws ClientException, IOException, InterruptedException {
         adminAuthor = new SlingClient(URI.create("http://localhost:4502"), "admin", "admin");
         limitedAccess = new SlingClient(URI.create("http://localhost:4502"), "test-limited-access-user",
                 "test-limited-access-user");
 
-        SlingHttpResponse response = adminAuthor.doGet("/tests/it-9.json", 200, 404);
-        if (response.getStatusLine().getStatusCode() == 404) {
+        if (!adminAuthor.exists(
+                "/apps/system/config/org.apache.sling.jcr.repoinit.RepositoryInitializer~oak-search.cfg.json")) {
+            log.info("Creating RepoInit Configuration...");
+            adminAuthor.upload(new File("src/test/resources/repoinit.json"), "application/json",
+                    "/apps/system/config/org.apache.sling.jcr.repoinit.RepositoryInitializer~oak-search.cfg.json", true,
+                    200, 201);
+            TimeUnit.SECONDS.sleep(10);
+        }
+
+        if (!adminAuthor.exists("/tests/it-9")) {
             log.info("Creating test content, this can take a few minutes...");
             adminAuthor.doPost("/bin/oak-search/ensurecontent", new StringEntity(""), List.of(), 200);
             log.info("Test content created!");
         } else {
             log.info("Test content already exists!");
         }
+        updateIndex();
     }
 
     protected abstract void updateIndex() throws ClientException, IOException, InterruptedException;

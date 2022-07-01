@@ -1,0 +1,5 @@
+{
+  "scripts": [
+    "register nodetypes\n<<===\n    <test='http://www.danklco.com/oak/test/1.0'>\n    [test:content] > nt:unstructured, nt:hierarchyNode\n      - test:name (string)\n===>>"
+  ]
+}

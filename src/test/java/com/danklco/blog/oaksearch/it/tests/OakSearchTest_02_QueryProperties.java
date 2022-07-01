@@ -18,7 +18,6 @@ package com.danklco.blog.oaksearch.it.tests;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
 import java.io.IOException;
-import java.io.UnsupportedEncodingException;
 
 import org.apache.sling.testing.clients.ClientException;
 import org.junit.jupiter.api.Test;
@@ -29,7 +28,7 @@ import org.junit.jupiter.api.Test;
  */
 class OakSearchTest_02_QueryProperties extends OakSearchITBase {
 
-    public OakSearchTest_02_QueryProperties() throws ClientException, UnsupportedEncodingException {
+    public OakSearchTest_02_QueryProperties() throws ClientException, IOException, InterruptedException {
         super();
     }
 

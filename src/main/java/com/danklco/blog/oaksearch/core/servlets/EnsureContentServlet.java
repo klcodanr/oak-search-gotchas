@@ -33,7 +33,9 @@ import org.apache.jackrabbit.api.security.user.UserManager;
 import org.apache.jackrabbit.commons.jackrabbit.authorization.AccessControlUtils;
 import org.apache.sling.api.SlingHttpServletRequest;
 import org.apache.sling.api.SlingHttpServletResponse;
+import org.apache.sling.api.resource.ModifiableValueMap;
 import org.apache.sling.api.resource.PersistenceException;
+import org.apache.sling.api.resource.Resource;
 import org.apache.sling.api.resource.ResourceResolver;
 import org.apache.sling.api.resource.ResourceUtil;
 import org.apache.sling.api.servlets.SlingAllMethodsServlet;
@@ -64,8 +66,6 @@ public class EnsureContentServlet extends SlingAllMethodsServlet {
         if (admin.getResource(PATH_TESTS) == null) {
             log.info("Performing initial setup...");
             try {
-                setupNodeTypes(admin);
-                admin.refresh();
                 createTestContent(admin);
                 setupUsersAndGroups(admin);
                 log.info("Setup complete!");
@@ -78,48 +78,28 @@ public class EnsureContentServlet extends SlingAllMethodsServlet {
         }
     }
 
-    private void setupNodeTypes(ResourceResolver admin) throws IOException, InterruptedException {
-        log.info("Setting up node types...");
-        ResourceUtil.getOrCreateResource(admin,
-                "/apps/system/config/org.apache.sling.jcr.repoinit.RepositoryInitializer~oak-search.cfg.json",
-                Map.of(JcrConstants.JCR_PRIMARYTYPE, JcrConstants.NT_FILE),
-                JcrConstants.NT_FOLDER, false);
-        ResourceUtil.getOrCreateResource(admin,
-                "/apps/system/config/org.apache.sling.jcr.repoinit.RepositoryInitializer~oak-search.cfg.json/jcr:content",
-                Map.of(JcrConstants.JCR_PRIMARYTYPE, JcrConstants.NT_RESOURCE, JcrConstants.JCR_DATA,
-                        new ByteArrayInputStream(
-                                "{\n  \"scripts\": [\n    \"register nodetypes\\n<<===\\n    <test='http://www.danklco.com/oak/test/1.0'>\\n    [test:content] > nt:unstructured, nt:hierarchyNode\\n      - test:name (string)\\n===>>\"\n  ]\n}\n"
-                                        .getBytes())),
-                JcrConstants.NT_UNSTRUCTURED, false);
-        admin.commit();
-        TimeUnit.SECONDS.sleep(10);
-    }
-
     private void createTestContent(ResourceResolver admin) throws PersistenceException {
         log.info("Creating test content...");
-        ResourceUtil.getOrCreateResource(admin, PATH_TESTS,
-                Map.of(JcrConstants.JCR_PRIMARYTYPE, NT_TEST_CONTENT, PN_TEST_NAME, TEST_NAME),
-                NT_TEST_CONTENT, false);
+        Resource root = ResourceUtil.getOrCreateResource(admin, PATH_TESTS, NT_TEST_CONTENT, NT_TEST_CONTENT, false);
         for (Integer iteration : IntStream.range(1, 10).toArray()) {
-            ResourceUtil.getOrCreateResource(admin,
-                    String.format("/tests/it-%d", iteration),
-                    Map.of(JcrConstants.JCR_PRIMARYTYPE, NT_TEST_CONTENT, PN_TEST_NAME, TEST_NAME, PN_TEST_ITERATION,
-                            iteration),
-                    NT_TEST_CONTENT, false);
+            Resource iterRsrc = admin.create(root, String.format("it-%d", iteration),
+                    Map.of(JcrConstants.JCR_PRIMARYTYPE, NT_TEST_CONTENT));
+            iterRsrc.adaptTo(ModifiableValueMap.class).putAll(Map.of(PN_TEST_NAME, TEST_NAME, PN_TEST_ITERATION,
+                    iteration));
             for (Integer item : IntStream.range(1, 100 * iteration).toArray()) {
-                ResourceUtil.getOrCreateResource(admin,
-                        String.format("/tests/it-%d/item-%d", iteration, item),
-                        Map.of(JcrConstants.JCR_PRIMARYTYPE, NT_TEST_CONTENT, PN_TEST_NAME, TEST_NAME,
-                                PN_TEST_ITERATION, iteration, PN_TEST_ITEM, item),
-                        NT_TEST_CONTENT, false);
+                Resource itRsrc = admin.create(iterRsrc, String.format("item-%d", item),
+                        Map.of(JcrConstants.JCR_PRIMARYTYPE, NT_TEST_CONTENT));
+                itRsrc.adaptTo(ModifiableValueMap.class).putAll(Map.of(PN_TEST_NAME, TEST_NAME,
+                        PN_TEST_ITERATION, iteration, PN_TEST_ITEM, item));
                 for (Integer child : IntStream.range(1, 100 * iteration).toArray()) {
-                    ResourceUtil.getOrCreateResource(admin,
-                            String.format("/tests/it-%d/item-%d/child-%d", iteration, item, child),
-                            Map.of(JcrConstants.JCR_PRIMARYTYPE, NT_TEST_CONTENT, PN_TEST_NAME, TEST_NAME,
+                    admin.create(itRsrc, String.format("child-%d", child),
+                            Map.of(JcrConstants.JCR_PRIMARYTYPE, NT_TEST_CONTENT))
+                            .adaptTo(ModifiableValueMap.class)
+                            .putAll(Map.of(PN_TEST_NAME, TEST_NAME,
                                     PN_TEST_ITERATION, iteration, PN_TEST_ITEM, item,
-                                    PN_TEST_CHILD, child),
-                            NT_TEST_CONTENT, false);
+                                    PN_TEST_CHILD, child));
                 }
+                log.info("Saving at item {} of iteration {}...", item, iteration);
                 admin.commit();
             }
         }
