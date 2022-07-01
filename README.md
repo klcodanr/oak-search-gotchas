@@ -1,6 +1,6 @@
-# Oak Search Demo
+# Oak Search Gotchas
 
-This project demonstrates the 
+This project demonstrates some gotchas when using Oak Search & Indexing.
 
 ## How to build
 
