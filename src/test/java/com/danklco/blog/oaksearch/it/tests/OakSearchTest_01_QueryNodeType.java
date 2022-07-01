@@ -41,9 +41,7 @@ class OakSearchTest_01_QueryNodeType extends OakSearchITBase {
         doUpdateIndex("01_QueryNodeType/indexDef.json");
     }
 
-    /**
-     * First, we'll execute a query just using the node type and it should work!
-     */
+    // First, we'll execute a query just using the node type and it should work!
     @Test
     void canQueryByType() throws Exception {
         TestQueryResult result = super.runQuery(adminAuthor, "SELECT * FROM [test:content] AS s", 100);
