@@ -16,11 +16,15 @@
 package com.danklco.blog.oaksearch.it.tests;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import java.io.IOException;
 
+import org.apache.commons.lang3.StringUtils;
 import org.apache.sling.testing.clients.ClientException;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.ValueSource;
 
 /**
  * This test demonstrates that you cannot just rely on node types to ensure that
@@ -34,42 +38,73 @@ class OakSearchTest_01_QueryNodeType extends OakSearchITBase {
 
     @Override
     protected void updateIndex() throws ClientException, IOException, InterruptedException {
-        // TODO Probably should do something here
+        doUpdateIndex("01_QueryNodeType/indexDef.json");
     }
 
+    /**
+     * First, we'll execute a query just using the node type and it should work!
+     */
     @Test
-    void canQueryByType() throws ClientException, IOException {
-        // First, we'll execute a query and it should work!
-        TestQueryResult result1 = super.runQuery(adminAuthor, "SELECT * FROM [test:content] AS s", 100);
-        assertEquals(100, result1.getResults().size());
-        // But what happens as soon as we add a constraint?
+    void canQueryByType() throws Exception {
+        TestQueryResult result = super.runQuery(adminAuthor, "SELECT * FROM [test:content] AS s", 100);
+        assertEquals("", result.getCaughtException());
+        assertEquals(100, result.getResults().size());
+    }
 
-        // This should fail while the first works because the first query was ONLY using
-        // the nodeType index and could just return the first N number of nodes it found
-        // of the type for a constrained query without an index, Oak has to first get
-        // the nodes of the type from the node type index, then read them in memory to
-        // determine which match the constraints of the query.
-        //
-        // Add the following line to the updateIndex() method and re-run this test:
+    // In fact I can even query against certain values and get back results
+    @Test
+    void someOtherQuerysWork() throws Exception {
+        TestQueryResult result = super.runQuery(adminAuthor,
+                "SELECT * FROM [test:content] AS s WHERE ISDESCENDANTNODE([/tests])", 100);
+        assertEquals("", result.getCaughtException());
+        assertEquals(100, result.getResults().size());
+        int succeeded = 0;
+        for (int i = 1; i < 10; i++) {
+            result = super.runQuery(adminAuthor,
+                    "SELECT * FROM [test:content] AS s WHERE ISDESCENDANTNODE([/tests]) AND [test:iteration]=" + i,
+                    100);
+            if (StringUtils.isBlank(result.getCaughtException())) {
+                succeeded++;
+            }
+        }
+        assertTrue(succeeded > 0);
+    }
 
-        // doUpdateIndex("01_QueryNodeType/indexDef.json");
+    // But what happens as soon as we add a constraint?
 
-        // Review the 01_QueryNodeType/indexDef.json file and note that it will
-        // create an index of the property test:iteration for the node type test:content
-        TestQueryResult result2 = super.runQuery(adminAuthor,
-                "SELECT * FROM [test:content] AS s WHERE ISDESCENDANTNODE([/tests]) AND [test:iteration]=9", 100);
-        assertEquals(100, result2.getResults().size());
+    // This should fail while the first works because the first query was ONLY using
+    // the nodeType index and could just return the first N number of nodes it found
+    // of the type for a constrained query without an index, Oak has to first get
+    // the nodes of the type from the node type index, then read them in memory to
+    // determine which match the constraints of the query.
+    //
+    // Add the following line to the updateIndex() method and re-run this test:
 
-        // Note that you can see this on the AEM Query Performance Tool:
+    // doUpdateIndex("01_QueryNodeType/indexDef.json");
+
+    // Review the 01_QueryNodeType/indexDef.json file and note that it will
+    // create an index of the property test:iteration for the node type test:content
+    @ParameterizedTest
+    @ValueSource(ints = { 1, 2, 3, 4, 5, 6, 7, 8, 9 })
+    void notAllQueryValuesWork(int iteration) throws Exception {
+        TestQueryResult result = super.runQuery(adminAuthor,
+                "SELECT * FROM [test:content] AS s WHERE ISDESCENDANTNODE([/tests]) AND [test:iteration]=" + iteration,
+                100);
+        assertEquals("", result.getCaughtException());
+        assertEquals(100, result.getResults().size());
+
+        // You can verify this on the AEM Query Performance Tool:
         // http://localhost:4502/libs/granite/operations/content/diagnosistools/queryPerformance.html
         // The Query plan tells us how the query is executed, specifically:
         // - It's using the index:
         // lucene:testContentLucene(/oak:index/testContentLucene)
         // - Filtering from the index by path: +:ancestors:/tests
-        // - Querying against the indexed property: +test:iteration:[9 TO 9]
+        // - Querying against the indexed property: +test:iteration:[{NUM} TO {NUM}]
         assertEquals(
-                "[test:content] as [s] /* lucene:testContentLucene(/oak:index/testContentLucene) +:ancestors:/tests +test:iteration:[9 TO 9] where (isdescendantnode([s], [/tests])) and ([s].[test:iteration] = 9) */",
-                result2.getPlan());
+                "[test:content] as [s] /* lucene:testContentLucene(/oak:index/testContentLucene) +:ancestors:/tests +test:iteration:["
+                        + iteration + " TO " + iteration
+                        + "] where (isdescendantnode([s], [/tests])) and ([s].[test:iteration] = " + iteration + ") */",
+                result.getPlan());
     }
 
 }
