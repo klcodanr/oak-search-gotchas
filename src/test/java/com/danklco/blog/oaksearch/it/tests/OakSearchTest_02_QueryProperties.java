@@ -59,12 +59,12 @@ class OakSearchTest_02_QueryProperties extends OakSearchITBase {
     @ParameterizedTest
     @ValueSource(ints = { 1, 2, 3, 4, 5, 6, 7, 8, 9 })
     void canQueryAgainstMultipleProperties(int item) throws ClientException, IOException {
-        TestQueryResult result2 = super.runQuery(adminAuthor,
+        TestQueryResult result = super.runQuery(adminAuthor,
                 "SELECT * FROM [test:content] AS s WHERE ISDESCENDANTNODE([/tests]) AND [test:iteration]=9 AND [test:item]="
                         + item,
                 100);
-
-        assertEquals(100, result2.getResults().size());
+        assertEquals("", result.getCaughtException());
+        assertEquals(100, result.getResults().size());
 
         // You can validate this on the AEM Query Performance Tool:
         // http://localhost:4502/libs/granite/operations/content/diagnosistools/queryPerformance.html
@@ -79,6 +79,6 @@ class OakSearchTest_02_QueryProperties extends OakSearchITBase {
                         + item + " TO " + item
                         + "] +test:iteration:[9 TO 9] where (isdescendantnode([s], [/tests])) and ([s].[test:iteration] = 9) and ([s].[test:item] = "
                         + item + ") */",
-                result2.getPlan());
+                result.getPlan());
     }
 }
