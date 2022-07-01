@@ -94,7 +94,7 @@ public abstract class OakSearchITBase {
      * @throws IOException          an exception occurs reading the file
      * @throws InterruptedException the process is interrupted
      */
-    protected void updateIndex(String definitionFile) throws ClientException, IOException, InterruptedException {
+    protected static void updateIndex(String definitionFile) throws ClientException, IOException, InterruptedException {
 
         String definition = IOUtils.toString(OakSearchITBase.class.getClassLoader().getResourceAsStream(definitionFile),
                 StandardCharsets.UTF_8);
@@ -119,7 +119,7 @@ public abstract class OakSearchITBase {
 
         boolean reindex = true;
         for (int i = 0; i < 86400 && reindex; i++) {
-            if (i % 60 == 0) {
+            if (i > 0 && i % 60 == 0) {
                 log.info("Still waiting for reindexing to complete after {} seconds...", i);
             }
             TimeUnit.SECONDS.sleep(1);
@@ -129,7 +129,7 @@ public abstract class OakSearchITBase {
         log.info("Reindexing complete!");
     }
 
-    private void setReindex(boolean reindex) throws UnsupportedEncodingException, ClientException {
+    private static void setReindex(boolean reindex) throws UnsupportedEncodingException, ClientException {
         adminAuthor
                 .doPost(INDEX_PATH,
                         new UrlEncodedFormEntity(List.of(new BasicNameValuePair("reindex", String.valueOf(reindex)),
