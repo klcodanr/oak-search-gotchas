@@ -49,11 +49,12 @@ class OakSearchTest_03_Ordering extends OakSearchITBase {
     @MethodSource(value = "generateScenarios")
     void canRunOrdered(String order, int iteration) throws ClientException, IOException {
 
-        TestQueryResult result2 = super.runQuery(adminAuthor,
+        TestQueryResult result = super.runQuery(adminAuthor,
                 "SELECT * FROM [test:content] AS s WHERE ISDESCENDANTNODE([/tests]) AND [test:iteration]=" + iteration
                         + " ORDER BY [" + order + "]",
                 100);
-        assertEquals(100, result2.getResults().size());
+        assertEquals("", result.getCaughtException());
+        assertEquals(100, result.getResults().size());
 
         // You can verify this on the AEM Query Performance Tool:
         // http://localhost:4502/libs/granite/operations/content/diagnosistools/queryPerformance.html
@@ -70,7 +71,7 @@ class OakSearchTest_03_Ordering extends OakSearchITBase {
                         + "] ordering:[{ propertyName : " + order
                         + ", propertyType : UNDEFINED, order : ASCENDING }] where (isdescendantnode([s], [/tests])) and ([s].[test:iteration] = "
                         + iteration + ") */",
-                result2.getPlan());
+                result.getPlan());
     }
 
     static Stream<Arguments> generateScenarios() {
