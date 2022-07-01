@@ -49,10 +49,10 @@ public abstract class OakSearchITBase {
 
     private static final Logger log = LoggerFactory.getLogger(OakSearchITBase.class);
 
-    protected SlingClient adminAuthor;
-    protected SlingClient limitedAccess;
+    protected static SlingClient adminAuthor;
+    protected static SlingClient limitedAccess;
 
-    public OakSearchITBase() throws ClientException, IOException, InterruptedException {
+    protected static void setup() throws ClientException, InterruptedException, UnsupportedEncodingException {
         adminAuthor = new SlingClient(URI.create("http://localhost:4502"), "admin", "admin");
         limitedAccess = new SlingClient(URI.create("http://localhost:4502"), "test-limited-access-user",
                 "test-limited-access-user");
@@ -73,10 +73,7 @@ public abstract class OakSearchITBase {
         } else {
             log.info("Test content already exists!");
         }
-        updateIndex();
     }
-
-    protected abstract void updateIndex() throws ClientException, IOException, InterruptedException;
 
     protected TestQueryResult runQuery(SlingClient client, String query, long limit)
             throws ClientException, IOException {
@@ -97,7 +94,7 @@ public abstract class OakSearchITBase {
      * @throws IOException          an exception occurs reading the file
      * @throws InterruptedException the process is interrupted
      */
-    protected void doUpdateIndex(String definitionFile) throws ClientException, IOException, InterruptedException {
+    protected void updateIndex(String definitionFile) throws ClientException, IOException, InterruptedException {
 
         String definition = IOUtils.toString(OakSearchITBase.class.getClassLoader().getResourceAsStream(definitionFile),
                 StandardCharsets.UTF_8);
@@ -121,7 +118,10 @@ public abstract class OakSearchITBase {
         setReindex(true);
 
         boolean reindex = true;
-        while (reindex) {
+        for (int i = 0; i < 86400 && reindex; i++) {
+            if (i % 60 == 0) {
+                log.info("Still waiting for reindexing to complete after {} seconds...", i);
+            }
             TimeUnit.SECONDS.sleep(1);
             JsonNode index = adminAuthor.doGetJson(INDEX_PATH, 1, 200);
             reindex = index.get("reindex").asBoolean();

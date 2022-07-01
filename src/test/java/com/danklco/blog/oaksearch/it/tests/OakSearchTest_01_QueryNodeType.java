@@ -18,10 +18,8 @@ package com.danklco.blog.oaksearch.it.tests;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
-import java.io.IOException;
-
 import org.apache.commons.lang3.StringUtils;
-import org.apache.sling.testing.clients.ClientException;
+import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.ValueSource;
@@ -32,13 +30,9 @@ import org.junit.jupiter.params.provider.ValueSource;
  */
 class OakSearchTest_01_QueryNodeType extends OakSearchITBase {
 
-    public OakSearchTest_01_QueryNodeType() throws ClientException, IOException, InterruptedException {
-        super();
-    }
-
-    @Override
-    protected void updateIndex() throws ClientException, IOException, InterruptedException {
-        doUpdateIndex("01_QueryNodeType/indexDef.json");
+    @BeforeAll
+    static void beforeAll() throws Exception{
+        OakSearchITBase.setup();
     }
 
     // First, we'll execute a query just using the node type and it should work!
@@ -76,9 +70,9 @@ class OakSearchTest_01_QueryNodeType extends OakSearchITBase {
     // the nodes of the type from the node type index, then read them in memory to
     // determine which match the constraints of the query.
     //
-    // Add the following line to the updateIndex() method and re-run this test:
+    // Add the following line to the beforeAll() method and re-run this test:
 
-    // doUpdateIndex("01_QueryNodeType/indexDef.json");
+    // updateIndex("01_QueryNodeType/indexDef.json");
 
     // Review the 01_QueryNodeType/indexDef.json file and note that it will
     // create an index of the property test:iteration for the node type test:content

@@ -20,6 +20,7 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import java.io.IOException;
 
 import org.apache.sling.testing.clients.ClientException;
+import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 
 /**
@@ -28,13 +29,9 @@ import org.junit.jupiter.api.Test;
  */
 class OakSearchTest_05_Permissions extends OakSearchITBase {
 
-    public OakSearchTest_05_Permissions() throws ClientException, IOException, InterruptedException {
-        super();
-    }
-
-    @Override
-    protected void updateIndex() throws ClientException, IOException, InterruptedException {
-        // Can't be fixed with indexing...
+    @BeforeAll
+    static void beforeAll() throws Exception {
+        OakSearchITBase.setup();
     }
 
     @Test
@@ -58,7 +55,7 @@ class OakSearchTest_05_Permissions extends OakSearchITBase {
 
         // Unfortunately, really the only fix for this problem is to set up the
         // query so that it won't query over Nodes the user cannot see. To resolve
-        // this issue, change line 32 to:
+        // this issue, change the path to:
         // String path = "/tests/it-9";
 
     }

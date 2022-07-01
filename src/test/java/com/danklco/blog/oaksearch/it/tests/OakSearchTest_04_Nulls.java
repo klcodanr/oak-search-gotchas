@@ -20,6 +20,7 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import java.io.IOException;
 
 import org.apache.sling.testing.clients.ClientException;
+import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 
 /**
@@ -28,13 +29,9 @@ import org.junit.jupiter.api.Test;
  */
 class OakSearchTest_04_Nulls extends OakSearchITBase {
 
-    public OakSearchTest_04_Nulls() throws ClientException, IOException, InterruptedException {
-        super();
-    }
-
-    @Override
-    protected void updateIndex() throws ClientException, IOException, InterruptedException {
-        // TODO Probably should do something here
+    @BeforeAll
+    static void beforeAll() throws Exception {
+        OakSearchITBase.setup();
     }
 
     @Test
@@ -57,8 +54,8 @@ class OakSearchTest_04_Nulls extends OakSearchITBase {
         // index, making these issues hard to spot without real data
         // and extensive testing
 
-        // To fix this, add the following line to the beforeClass method:
-        // doUpdateIndex("04_NullProperties/indexDef.json");
+        // To fix this, add the following line to the beforeAll method:
+        // updateIndex("04_NullProperties/indexDef.json");
 
         // This will load a new index definition which will include null checks
         for (int i = 0; i < 10; i++) {
