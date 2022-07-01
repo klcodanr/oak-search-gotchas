@@ -1,0 +1,24 @@
+{
+  "jcr:primaryType": "oak:QueryIndexDefinition",
+  "compatVersion": 2,
+  "includedPaths": ["/tests"],
+  "queryPaths": ["/tests"],
+  "type": "lucene",
+  "async": ["async"],
+  "evaluatePathRestrictions": true,
+  "reindex": true,
+  "indexRules": {
+    "jcr:primaryType": "nt:unstructured",
+    "test:content": {
+      "jcr:primaryType": "nt:unstructured",
+      "properties": {
+        "jcr:primaryType": "nt:unstructured",
+        "iteration": {
+          "jcr:primaryType": "nt:unstructured",
+          "propertyIndex": true,
+          "name": "test:iteration"
+        }
+      }
+    }
+  }
+}
